@@ -5,6 +5,13 @@
 **Status**: Draft  
 **Input**: User description: "Document Upload and Management Feature - Requirements"
 
+## Clarifications
+
+### Session 2026-09-10
+
+- Q: Which file types and maximum file size must uploads support? → A: PDF, DOC, DOCX, XLS, XLSX, PPT, and PPTX files up to 25 MB.
+- Q: What should happen when malware scanning flags an uploaded file? → A: Show the uploader that the file is quarantined, prevent downloads, and hide it from other users; release it automatically only after a subsequent clean malware scan.
+
 ## User Scenarios & Testing *(mandatory)*
 
 ### User Story 1 - Upload and organize work documents (Priority: P1)
@@ -76,6 +83,7 @@ As a team member or manager, I want to access documents from tasks and the dashb
 - How does the system handle a user who tries to access a document they do not have permission to view? The system must deny access and keep the document hidden from the unauthorized user.
 - What happens when uploading multiple files at the same time and one fails validation? The system must report the specific failure without corrupting the successful uploads or leaving the user uncertain about the result.
 - What happens when a shared document is deleted or replaced? The system must ensure recipients only see the document if they still have access and the activity is logged.
+- What happens when malware scanning flags an uploaded file? The system must mark it as quarantined, show that status to the uploader, prevent downloads, and hide it from all other users. It must automatically release the file only after a subsequent malware scan reports it clean; otherwise, it remains quarantined or is rejected without exposure.
 
 ## Requirements *(mandatory)*
 
@@ -83,8 +91,8 @@ As a team member or manager, I want to access documents from tasks and the dashb
 
 - **FR-001**: The system MUST allow users to upload one or more supported files and capture required metadata including a document title, category, and optional description, project, and tags.
 - **FR-002**: The system MUST allow employees, team leads, project managers, and administrators to upload documents according to their existing role-based access and project assignment.
-- **FR-003**: The system MUST validate uploaded files against the supported file types and maximum file size before they are stored, and it MUST show clear success or error messaging when upload attempts fail.
-- **FR-004**: The system MUST scan uploaded files for malicious content before they are accepted for storage and MUST reject unsafe files without exposing them to users or other system components.
+- **FR-003**: The system MUST validate uploaded files against PDF, DOC, DOCX, XLS, XLSX, PPT, and PPTX file types and a maximum size of 25 MB before they are stored, and it MUST show clear success or error messaging when upload attempts fail.
+- **FR-004**: The system MUST scan uploaded files for malicious content before they are available to users. A file flagged by the scan MUST be quarantined, its quarantined status shown to the uploader, downloads prevented, and visibility denied to all other users. The system MUST release the file automatically only after a subsequent malware scan reports it clean; files that remain unsafe or cannot be safely released MUST remain quarantined or be rejected without exposure to users or other system components.
 - **FR-005**: The system MUST store document metadata securely, including upload date and time, uploader identity, file size, file type, and associated project when provided.
 - **FR-006**: The system MUST provide a document library view for each user that lists uploaded documents with the required summary fields and supports sorting and filtering by category, project, and date range.
 - **FR-007**: The system MUST provide project document views that show all documents associated with a project and limit visibility to authorized project participants.
@@ -102,7 +110,7 @@ As a team member or manager, I want to access documents from tasks and the dashb
 
 ### Key Entities *(include if feature involves data)*
 
-- **Document**: Represents an uploaded work-related file, including title, description, category, associated project, uploader, upload date, file size, MIME type, tags, and current access status.
+- **Document**: Represents an uploaded work-related file, including title, description, category, associated project, uploader, upload date, file size, MIME type, tags, and lifecycle/access status including quarantined and automatically released-after-clean-rescan states.
 - **User**: Represents a dashboard user whose role determines what documents they may create, view, share, edit, or delete.
 - **Project**: Represents a work unit that can contain related documents and define which users are authorized to access them.
 - **DocumentShare**: Represents a document permission granted to a specific user or team, including the sharing party, recipient, and share date.
@@ -123,7 +131,7 @@ As a team member or manager, I want to access documents from tasks and the dashb
 ## Assumptions
 
 - Users are familiar with the core dashboard and role-based permissions used by the application.
-- Most uploaded documents are work-related files under 25 MB and fit within the listed supported file types.
+- Most uploaded documents are work-related files no larger than 25 MB and use PDF, DOC, DOCX, XLS, XLSX, PPT, or PPTX format.
 - Local storage is acceptable for the training environment, while the system still needs a migration-ready design for future cloud storage.
 - Project membership and role assignments are already defined elsewhere in the application and can be reused for authorization checks.
 - Shared documents are primarily intended for collaboration within the Contoso organization rather than externally hosted or public sharing.
@@ -137,6 +145,7 @@ As a team member or manager, I want to access documents from tasks and the dashb
 - Mobile app support during the initial release.
 - Soft-delete or trash-recovery workflows.
 - Document generation, templates, or advanced content processing features.
+- Manual document approval or administrator-controlled malware release workflows; quarantined files are released only after a subsequent clean malware scan.
 - Storage quota management or enterprise retention policies beyond the initial feature scope.
 
 ## Next Steps
