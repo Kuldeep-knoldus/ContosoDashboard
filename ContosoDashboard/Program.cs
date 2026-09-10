@@ -85,13 +85,99 @@ using (var scope = app.Services.CreateScope())
     try
     {
         var context = services.GetRequiredService<ApplicationDbContext>();
-        context.Database.EnsureCreated(); // For development - use migrations in production
+        context.Database.EnsureCreated();
+        EnsureDocumentWorkflowSchema(context);
     }
+
+    
     catch (Exception ex)
     {
         var logger = services.GetRequiredService<ILogger<Program>>();
         logger.LogError(ex, "An error occurred creating the database.");
     }
+}
+
+static void EnsureDocumentWorkflowSchema(ApplicationDbContext context)
+{
+    context.Database.ExecuteSqlRaw("""
+            IF OBJECT_ID(N'[Documents]', N'U') IS NULL
+            BEGIN
+                CREATE TABLE [Documents] (
+                    [DocumentId] int IDENTITY(1,1) NOT NULL CONSTRAINT [PK_Documents] PRIMARY KEY,
+                    [Title] nvarchar(255) NOT NULL,
+                    [Category] nvarchar(100) NOT NULL,
+                    [Description] nvarchar(2000) NULL,
+                    [Tags] nvarchar(1000) NULL,
+                    [UploaderId] int NOT NULL,
+                    [ProjectId] int NULL,
+                    [TaskId] int NULL,
+                    [OriginalFileName] nvarchar(255) NOT NULL,
+                    [StoragePath] nvarchar(512) NOT NULL,
+                    [ContentType] nvarchar(150) NOT NULL,
+                    [FileSizeBytes] bigint NOT NULL,
+                    [ContentHash] nvarchar(64) NOT NULL,
+                    [VersionNumber] int NOT NULL,
+                    [LifecycleStatus] int NOT NULL,
+                    [Visibility] int NOT NULL,
+                    [ScanStatus] int NOT NULL,
+                    [UploadedUtc] datetime2 NOT NULL,
+                    [UpdatedUtc] datetime2 NOT NULL,
+                    [ReleasedUtc] datetime2 NULL,
+                    [LastAccessedUtc] datetime2 NULL
+                );
+                CREATE INDEX [IX_Documents_LifecycleStatus_ScanStatus]
+                    ON [Documents] ([LifecycleStatus], [ScanStatus]);
+                CREATE INDEX [IX_Documents_DocumentId_VersionNumber]
+                    ON [Documents] ([DocumentId], [VersionNumber]);
+            END
+            """);
+
+        context.Database.ExecuteSqlRaw("""
+            IF OBJECT_ID(N'[ScanJobs]', N'U') IS NULL
+            BEGIN
+                CREATE TABLE [ScanJobs] (
+                    [ScanJobId] uniqueidentifier NOT NULL CONSTRAINT [PK_ScanJobs] PRIMARY KEY,
+                    [DocumentId] int NOT NULL,
+                    [VersionNumber] int NOT NULL,
+                    [ContentHash] nvarchar(64) NOT NULL,
+                    [StoragePath] nvarchar(512) NOT NULL,
+                    [IdempotencyKey] nvarchar(128) NOT NULL,
+                    [Attempt] int NOT NULL,
+                    [Status] int NOT NULL,
+                    [CreatedUtc] datetime2 NOT NULL,
+                    [DispatchedUtc] datetime2 NULL,
+                    [LeaseUtc] datetime2 NULL,
+                    [CompletedUtc] datetime2 NULL,
+                    [LastError] nvarchar(max) NULL,
+                    CONSTRAINT [UQ_ScanJobs_IdempotencyKey] UNIQUE ([IdempotencyKey]),
+                    CONSTRAINT [FK_ScanJobs_Documents] FOREIGN KEY ([DocumentId])
+                        REFERENCES [Documents] ([DocumentId])
+                );
+            END
+            """);
+
+        context.Database.ExecuteSqlRaw("""
+            IF OBJECT_ID(N'[ScanAttempts]', N'U') IS NULL
+            BEGIN
+                CREATE TABLE [ScanAttempts] (
+                    [ScanAttemptId] uniqueidentifier NOT NULL CONSTRAINT [PK_ScanAttempts] PRIMARY KEY,
+                    [ScanJobId] uniqueidentifier NOT NULL,
+                    [AttemptNumber] int NOT NULL,
+                    [StartedUtc] datetime2 NOT NULL,
+                    [CompletedUtc] datetime2 NULL,
+                    [Result] int NOT NULL,
+                    [ScannerCode] nvarchar(100) NULL,
+                    [ScannerVersion] nvarchar(100) NULL,
+                    [ResultRecordedUtc] datetime2 NULL,
+                    [ErrorSummary] nvarchar(2000) NULL,
+                    [ResultDigest] nvarchar(max) NULL,
+                    CONSTRAINT [UQ_ScanAttempts_JobAttempt]
+                        UNIQUE ([ScanJobId], [AttemptNumber]),
+                    CONSTRAINT [FK_ScanAttempts_ScanJobs] FOREIGN KEY ([ScanJobId])
+                        REFERENCES [ScanJobs] ([ScanJobId])
+                );
+            END
+            """);
 }
 
 // Configure the HTTP request pipeline.
