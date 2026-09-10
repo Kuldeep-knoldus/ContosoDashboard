@@ -1,0 +1,5 @@
+<Solution>
+  <Project Path="ContosoDashboard.Tests/ContosoDashboard.Tests.csproj" />
+  <Project Path="ContosoDashboard/ContosoDashboard.csproj" />
+  <Project Path="DocumentScanFunction/DocumentScanFunction.csproj" />
+</Solution>

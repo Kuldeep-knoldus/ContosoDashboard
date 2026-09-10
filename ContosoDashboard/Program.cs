@@ -3,12 +3,20 @@ using ContosoDashboard.Data;
 using ContosoDashboard.Services;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Components.Authorization;
+using Microsoft.Extensions.Options;
+using ContosoDashboard.Services.Documents;
+using ContosoDashboard.Services.Storage;
 
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
 builder.Services.AddRazorPages();
 builder.Services.AddServerSideBlazor();
+
+builder.Services.AddOptions<DocumentManagementOptions>()
+    .Bind(builder.Configuration.GetSection("DocumentManagement"))
+    .ValidateOnStart();
+builder.Services.AddSingleton<IValidateOptions<DocumentManagementOptions>, ScanOptionsValidator>();
 
 // Add authentication state provider for Blazor
 builder.Services.AddScoped<AuthenticationStateProvider, CustomAuthenticationStateProvider>();
@@ -43,6 +51,27 @@ builder.Services.AddScoped<ITaskService, TaskService>();
 builder.Services.AddScoped<IProjectService, ProjectService>();
 builder.Services.AddScoped<INotificationService, NotificationService>();
 builder.Services.AddScoped<IDashboardService, DashboardService>();
+builder.Services.AddScoped<IDocumentService, DocumentService>();
+builder.Services.AddScoped<IDocumentAuthorization, DocumentAuthorization>();
+builder.Services.AddScoped<IScanResultService, ScanResultService>();
+builder.Services.AddScoped<IScanJobDispatcher, ScanJobDispatcher>();
+builder.Services.AddScoped<ScanWorkflowService>();
+builder.Services.AddHostedService<ScanOutboxBackgroundService>();
+builder.Services.AddSingleton<IScanEngine, FakeScanEngine>();
+builder.Services.AddSingleton<IScanJobQueue>(sp =>
+{
+    var options = sp.GetRequiredService<IOptions<DocumentManagementOptions>>().Value;
+    return string.Equals(options.QueueProvider, "Azure", StringComparison.OrdinalIgnoreCase)
+        ? new AzureQueueScanJobQueue(Options.Create(options))
+        : new InMemoryScanJobQueue();
+});
+builder.Services.AddSingleton<IFileStorageService>(sp =>
+{
+    var options = sp.GetRequiredService<IOptions<DocumentManagementOptions>>().Value;
+    return string.Equals(options.StorageProvider, "Azure", StringComparison.OrdinalIgnoreCase)
+        ? new AzureBlobStorageService(Options.Create(options))
+        : new LocalFileStorageService(Options.Create(options), sp.GetRequiredService<IWebHostEnvironment>());
+});
 
 // Add HttpContextAccessor for accessing user claims
 builder.Services.AddHttpContextAccessor();
