@@ -17,10 +17,50 @@ public class ApplicationDbContext : DbContext
     public DbSet<Notification> Notifications { get; set; } = null!;
     public DbSet<ProjectMember> ProjectMembers { get; set; } = null!;
     public DbSet<Announcement> Announcements { get; set; } = null!;
+    public DbSet<Document> Documents { get; set; } = null!;
+    public DbSet<ScanJob> ScanJobs { get; set; } = null!;
+    public DbSet<ScanAttempt> ScanAttempts { get; set; } = null!;
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         base.OnModelCreating(modelBuilder);
+
+        modelBuilder.Entity<Document>(entity =>
+        {
+            entity.HasKey(d => d.DocumentId);
+            entity.Property(d => d.Title).HasMaxLength(255).IsRequired();
+            entity.Property(d => d.Category).HasMaxLength(100).IsRequired();
+            entity.Property(d => d.Description).HasMaxLength(2000);
+            entity.Property(d => d.OriginalFileName).HasMaxLength(255).IsRequired();
+            entity.Property(d => d.StoragePath).HasMaxLength(512).IsRequired();
+            entity.Property(d => d.ContentHash).HasMaxLength(64).IsRequired();
+            entity.Property(d => d.ContentType).HasMaxLength(150).IsRequired();
+            entity.Property(d => d.Tags).HasMaxLength(1000);
+            entity.HasIndex(d => new { d.LifecycleStatus, d.ScanStatus });
+            entity.HasIndex(d => new { d.DocumentId, d.VersionNumber });
+            entity.HasOne(d => d.Uploader).WithMany().HasForeignKey(d => d.UploaderId).OnDelete(DeleteBehavior.Restrict);
+            entity.HasOne(d => d.Project).WithMany().HasForeignKey(d => d.ProjectId).OnDelete(DeleteBehavior.Restrict);
+        });
+
+        modelBuilder.Entity<ScanJob>(entity =>
+        {
+            entity.HasKey(j => j.ScanJobId);
+            entity.Property(j => j.IdempotencyKey).HasMaxLength(128).IsRequired();
+            entity.Property(j => j.ContentHash).HasMaxLength(64).IsRequired();
+            entity.Property(j => j.StoragePath).HasMaxLength(512).IsRequired();
+            entity.HasIndex(j => j.IdempotencyKey).IsUnique();
+            entity.HasOne(j => j.Document).WithMany(d => d.ScanJobs).HasForeignKey(j => j.DocumentId);
+        });
+
+        modelBuilder.Entity<ScanAttempt>(entity =>
+        {
+            entity.HasKey(a => a.ScanAttemptId);
+            entity.Property(a => a.ScannerCode).HasMaxLength(100);
+            entity.Property(a => a.ScannerVersion).HasMaxLength(100);
+            entity.Property(a => a.ErrorSummary).HasMaxLength(2000);
+            entity.HasIndex(a => new { a.ScanJobId, a.AttemptNumber }).IsUnique();
+            entity.HasOne(a => a.ScanJob).WithMany(j => j.Attempts).HasForeignKey(a => a.ScanJobId);
+        });
 
         // Configure User relationships
         modelBuilder.Entity<User>()
