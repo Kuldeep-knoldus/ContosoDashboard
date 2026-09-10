@@ -1,0 +1,14 @@
+{
+  "IsEncrypted": false,
+  "Values": {
+    "FUNCTIONS_WORKER_RUNTIME": "dotnet-isolated",
+    "AzureWebJobsStorage": "UseDevelopmentStorage=true",
+    "ScanQueueName": "document-scan",
+    "DocumentManagement__StorageProvider": "Local",
+    "DocumentManagement__QueueProvider": "InMemory",
+    "DocumentManagement__ScannerProvider": "Fake",
+    "DocumentManagement__FileStorageRoot": "App_Data\\quarantine",
+    "DocumentManagement__AzureStorageAccountUri": "",
+    "ConnectionStrings__DefaultConnection": "Server=(localdb)\\MSSQLLocalDB;Database=ContosoDashboard;Trusted_Connection=True;TrustServerCertificate=True"
+  }
+}

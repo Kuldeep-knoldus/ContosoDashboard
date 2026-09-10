@@ -1,0 +1,143 @@
+@page "/documents"
+@using System.Security.Claims
+@using ContosoDashboard.Services.Documents
+@attribute [Authorize]
+@inject IDocumentService DocumentService
+@inject AuthenticationStateProvider AuthenticationStateProvider
+
+<PageTitle>Documents - ContosoDashboard</PageTitle>
+
+<div class="container-fluid">
+    <h1>Documents</h1>
+    <p class="text-muted">Uploads remain private until a security scan reports clean.</p>
+
+    <EditForm Model="request" OnValidSubmit="UploadAsync" class="card card-body mb-4">
+        <DataAnnotationsValidator />
+        <div class="row g-3">
+            <div class="col-md-6">
+                <label class="form-label" for="document-title">Title</label>
+                <InputText id="document-title" class="form-control" @bind-Value="request.Title" />
+            </div>
+            <div class="col-md-6">
+                <label class="form-label" for="document-category">Category</label>
+                <InputText id="document-category" class="form-control" @bind-Value="request.Category" />
+            </div>
+            <div class="col-md-12">
+                <label class="form-label" for="document-description">Description (optional)</label>
+                <InputTextArea id="document-description" class="form-control" @bind-Value="request.Description" />
+            </div>
+            <div class="col-md-12">
+                <label class="form-label" for="document-file">File</label>
+                <InputFile id="document-file" OnChange="SelectFile" accept=".pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx" />
+                <div class="form-text">PDF, DOC, DOCX, XLS, XLSX, PPT, or PPTX up to 25 MB.</div>
+            </div>
+        </div>
+        @if (!string.IsNullOrWhiteSpace(message))
+        {
+            <div class="alert @(success ? "alert-success" : "alert-danger") mt-3" role="status">@message</div>
+        }
+        <button class="btn btn-primary mt-3" type="submit" disabled="@uploading">Upload</button>
+    </EditForm>
+
+    <h2 class="h4">My uploads</h2>
+    @if (documents.Count == 0)
+    {
+        <p class="text-muted">No documents uploaded yet.</p>
+    }
+    else
+    {
+        <div class="table-responsive">
+            <table class="table">
+                <thead><tr><th>Title</th><th>File</th><th>Status</th><th>Visibility</th></tr></thead>
+                <tbody>
+                @foreach (var document in documents)
+                {
+                    <tr>
+                        <td>@document.Title</td>
+                        <td>@document.OriginalFileName</td>
+                        <td><span class="badge @StatusClass(document.ScanStatus)">@document.ScanStatus</span></td>
+                        <td>@VisibilityText(document.Visibility, document.LifecycleStatus)</td>
+                    </tr>
+                }
+                </tbody>
+            </table>
+        </div>
+    }
+</div>
+
+@code {
+    private readonly UploadForm request = new();
+    private readonly List<DocumentSummaryDto> documents = new();
+    private IBrowserFile? selectedFile;
+    private string? message;
+    private bool success;
+    private bool uploading;
+
+    protected override async Task OnInitializedAsync() => await RefreshAsync();
+
+    private void SelectFile(InputFileChangeEventArgs args) => selectedFile = args.File;
+
+    private async Task UploadAsync()
+    {
+        if (selectedFile is null)
+        {
+            success = false;
+            message = "Choose a supported file before uploading.";
+            return;
+        }
+
+        uploading = true;
+        try
+        {
+            await using var stream = selectedFile.OpenReadStream(25 * 1024 * 1024);
+            var auth = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+            var upload = new DocumentUploadRequest(request.Title, request.Category, request.Description, null, null, null,
+                stream, selectedFile.Name, selectedFile.ContentType, selectedFile.Size);
+            var result = await DocumentService.UploadAsync(upload, auth.User);
+            success = result.Success;
+            message = result.Success ? result.StatusMessage : result.ErrorMessage;
+            if (result.Success)
+            {
+                request.Clear();
+                selectedFile = null;
+                await RefreshAsync();
+            }
+        }
+        catch (IOException)
+        {
+            success = false;
+            message = "The selected file could not be read. Please choose it again.";
+        }
+        finally
+        {
+            uploading = false;
+        }
+    }
+
+    private async Task RefreshAsync()
+    {
+        var auth = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+        documents.Clear();
+        documents.AddRange(await DocumentService.GetUserLibraryAsync(new DocumentQuery(), auth.User));
+    }
+
+    private static string StatusClass(DocumentScanStatus status) => status switch
+    {
+        DocumentScanStatus.Clean => "bg-success",
+        DocumentScanStatus.Flagged or DocumentScanStatus.Failed => "bg-danger",
+        _ => "bg-warning text-dark"
+    };
+
+    private static string VisibilityText(DocumentVisibility visibility, DocumentLifecycleStatus lifecycle) =>
+        lifecycle == DocumentLifecycleStatus.Active && visibility == DocumentVisibility.AuthorizedUsers
+            ? "Available to authorized users"
+            : "Private to uploader";
+
+    private sealed class UploadForm
+    {
+        public string Title { get; set; } = string.Empty;
+        public string Category { get; set; } = string.Empty;
+        public string? Description { get; set; }
+        public void Clear() { Title = string.Empty; Category = string.Empty; Description = null; }
+    }
+}

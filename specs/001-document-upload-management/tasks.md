@@ -12,34 +12,34 @@ xUnit, and bUnit.
 
 ## Phase 1: Setup
 
-- [ ] T001 Add Azure.Storage.Queues and Azure Functions isolated-worker dependencies to `ContosoDashboard/ContosoDashboard.csproj` and create `DocumentScanFunction/DocumentScanFunction.csproj`.
-- [ ] T002 [P] Create the unit and integration test projects and add them to `ContosoDashboard.sln`.
+- [X] T001 Add Azure.Storage.Queues and Azure Functions isolated-worker dependencies to `ContosoDashboard/ContosoDashboard.csproj` and create `DocumentScanFunction/DocumentScanFunction.csproj`.
+- [X] T002 [P] Create the unit and integration test projects and add them to `ContosoDashboard.sln`.
 - [ ] T065 [P] Create the component and contract test projects and add them to `ContosoDashboard.sln`.
-- [ ] T003 [P] Add document storage, scan queue, retry, poison queue, and provider settings to `ContosoDashboard/appsettings.json` and `appsettings.Development.json`.
-- [ ] T004 [P] Add Azure Function host, local queue, and local settings templates under `DocumentScanFunction/`.
-- [ ] T005 Document local/offline setup, LocalDB prerequisites, Azure emulator options, and test commands in `docs/document-management-development.md`.
+- [X] T003 [P] Add document storage, scan queue, retry, poison queue, and provider settings to `ContosoDashboard/appsettings.json` and `appsettings.Development.json`.
+- [X] T004 [P] Add Azure Function host, local queue, and local settings templates under `DocumentScanFunction/`.
+- [X] T005 Document local/offline setup, LocalDB prerequisites, Azure emulator options, and test commands in `docs/document-management-development.md`.
 
 ## Phase 2: Foundational Infrastructure
 
-- [ ] T006 Create the `Document` entity with lifecycle, visibility, scan status, version, hash, and audit fields in `ContosoDashboard/Models/`.
-- [ ] T007 Create `ScanJob` and `ScanAttempt` entities with attempt, retry, idempotency, and result fields in `ContosoDashboard/Models/`.
-- [ ] T008 Configure EF Core relationships, constraints, unique idempotency keys, and indexes in `ContosoDashboard/Data/ApplicationDbContext.cs`.
-- [ ] T009 Create and validate the EF Core migration for document and scan persistence in `ContosoDashboard/Data/Migrations/`.
-- [ ] T010 Define provider-neutral upload and document DTO contracts in `ContosoDashboard/Services/Documents/DocumentContracts.cs`.
-- [ ] T011 Define scan-job, scan-result, verdict, queue, scanner, and result-application contracts in `ContosoDashboard/Services/Documents/DocumentContracts.cs`.
-- [ ] T012 Define `IDocumentService`, `IFileStorageService`, and document authorization interfaces without leaking provider types.
-- [ ] T013 Define `IScanJobQueue`, `IScanEngine`, `IScanResultService`, and dispatcher interfaces without leaking Azure SDK types.
-- [ ] T014 Implement generated private storage keys, filename/content validation, and path-traversal protection in `ContosoDashboard/Services/Storage/`.
-- [ ] T015 Implement streaming copy, SHA-256 hashing, and storage cleanup in `ContosoDashboard/Services/Storage/`.
-- [ ] T016 Implement centralized deny-by-default authorization predicates for lifecycle visibility and uploader/project/share access.
-- [ ] T017 Add authorization checks for list, detail, download, preview, and status operations using the centralized predicates.
-- [ ] T018 Add strongly typed scan/storage options and startup validation.
-- [ ] T019 Register local filesystem storage, in-memory queue, and deterministic fake scanner providers.
-- [ ] T020 Add Azure queue/blob provider selection and clear startup errors for incomplete cloud configuration.
-- [ ] T021 Implement transactional scan-job outbox creation in `ScanJobOutboxService`.
-- [ ] T022 Implement retrying outbox dispatch in `ScanJobDispatcher`.
-- [ ] T023 Add structured audit event constants and recording for queued, started, clean, and flagged results.
-- [ ] T024 Add retry, poison, and ignored-result audit events and structured logging.
+- [X] T006 Create the `Document` entity with lifecycle, visibility, scan status, version, hash, and audit fields in `ContosoDashboard/Models/`.
+- [X] T007 Create `ScanJob` and `ScanAttempt` entities with attempt, retry, idempotency, and result fields in `ContosoDashboard/Models/`.
+- [X] T008 Configure EF Core relationships, constraints, unique idempotency keys, and indexes in `ContosoDashboard/Data/ApplicationDbContext.cs`.
+- [X] T009 Create and validate the EF Core migration for document and scan persistence in `ContosoDashboard/Data/Migrations/`.
+- [X] T010 Define provider-neutral upload and document DTO contracts in `ContosoDashboard/Services/Documents/DocumentContracts.cs`.
+- [X] T011 Define scan-job, scan-result, verdict, queue, scanner, and result-application contracts in `ContosoDashboard/Services/Documents/DocumentContracts.cs`.
+- [X] T012 Define `IDocumentService`, `IFileStorageService`, and document authorization interfaces without leaking provider types.
+- [X] T013 Define `IScanJobQueue`, `IScanEngine`, `IScanResultService`, and dispatcher interfaces without leaking Azure SDK types.
+- [X] T014 Implement generated private storage keys, filename/content validation, and path-traversal protection in `ContosoDashboard/Services/Storage/`.
+- [X] T015 Implement streaming copy, SHA-256 hashing, and storage cleanup in `ContosoDashboard/Services/Storage/`.
+- [X] T016 Implement centralized deny-by-default authorization predicates for lifecycle visibility and uploader/project/share access.
+- [X] T017 Add authorization checks for list, detail, download, preview, and status operations using the centralized predicates.
+- [X] T018 Add strongly typed scan/storage options and startup validation.
+- [X] T019 Register local filesystem storage, in-memory queue, and deterministic fake scanner providers.
+- [X] T020 Add Azure queue/blob provider selection and clear startup errors for incomplete cloud configuration.
+- [X] T021 Implement transactional scan-job outbox creation in `DocumentService`.
+- [X] T022 Implement retrying outbox dispatch in `ScanJobDispatcher`.
+- [X] T023 Add structured audit event constants and recording for queued, started, clean, and flagged results.
+- [X] T024 Add retry, poison, and ignored-result audit events and structured logging.
 - [ ] T025 [P] Add the LocalDB and seeded-user/project integration fixture.
 - [ ] T026 [P] Add fake authentication, storage, queue, and scanner fixtures.
 
@@ -50,34 +50,34 @@ and release only current versions with a clean scan.
 
 ### Tests
 
-- [ ] T066 [P] [US1] Test required metadata, supported PDF/DOC/DOCX/XLS/XLSX/PPT/PPTX formats, content types, unsafe names, path traversal, and the 25 MB limit.
-- [ ] T067 [P] [US1] Test pending, processing, clean, active, flagged, quarantined, retrying, failed, deleted, and replaced state transitions.
-- [ ] T068 [P] [US1] Test that only a current clean result changes visibility to active/authorized.
-- [ ] T069 [P] [US1] Test duplicate idempotency keys, mismatched hash/version, stale results, deleted documents, replaced versions, and malformed messages.
-- [ ] T070 [P] [US1] Test transactional upload/outbox persistence, compensating storage cleanup, and dispatcher retries.
-- [ ] T071 [P] [US1] Test schema-versioned queue envelopes contain no bytes, secrets, or user tokens and remain within message limits.
+- [X] T066 [P] [US1] Test required metadata, supported PDF/DOC/DOCX/XLS/XLSX/PPT/PPTX formats, content types, unsafe names, path traversal, and the 25 MB limit.
+- [X] T067 [P] [US1] Test pending, processing, clean, active, flagged, quarantined, retrying, failed, deleted, and replaced state transitions.
+- [X] T068 [P] [US1] Test that only a current clean result changes visibility to active/authorized.
+- [X] T069 [P] [US1] Test duplicate idempotency keys, mismatched hash/version, stale results, deleted documents, replaced versions, and malformed messages.
+- [X] T070 [P] [US1] Test transactional upload/outbox persistence, compensating storage cleanup, and dispatcher retries.
+- [X] T071 [P] [US1] Test schema-versioned queue envelopes contain no bytes, secrets, or user tokens and remain within message limits.
 
 ### Implementation
 
-- [ ] T027 [US1] Implement upload metadata and file validation, including format, size, filename, and content-type rules.
-- [ ] T028 [US1] Implement private quarantine storage, hashing, and cleanup for an upload.
-- [ ] T029 [US1] Implement `Document` creation, authorization, and scan-job outbox creation for a valid upload.
-- [ ] T030 [US1] Implement scan-result validation for job key, version, hash, provenance, and current document state.
-- [ ] T031 [US1] Implement clean, flagged, failed, duplicate, and stale scan-result state transitions.
-- [ ] T032 [US1] Implement bounded retry and visibility-timeout handling for scan jobs.
-- [ ] T033 [US1] Implement poison-message handling, uploader-only retention, and terminal failure auditing.
-- [ ] T034 [US1] Implement the Azure Queue Storage adapter for compact schema-versioned `ScanJobMessage` JSON.
-- [ ] T035 [US1] Implement the private Azure Blob Storage adapter using generated keys and managed identity.
-- [ ] T036 [US1] Implement the Azure Function trigger to deserialize and validate a `ScanJobMessage`.
-- [ ] T037 [US1] Implement Function scanner invocation, result publication/application, and successful/terminal acknowledgement behavior.
-- [ ] T038 [US1] Configure Function retry/dequeue limits, visibility timeout, poison queue routing, and non-secret logging.
-- [ ] T039 [US1] Add Azure adapter and Function contract tests for retry, terminal failure, poison routing, and acknowledgement.
-- [ ] T040 [US1] Add contract tests for idempotency, stale results, and no-secret/no-bytes queue guarantees.
-- [ ] T041 [US1] Add upload form UI with accessible metadata labels and per-file validation errors.
-- [ ] T042 [US1] Add upload status UI for pending, flagged, and failed states with downloads disabled.
-- [ ] T043 [US1] Add uploader-only document status/detail components that never expose quarantined bytes or storage paths.
-- [ ] T044 [US1] Add integration coverage for pending privacy, clean release, flagged files, and unavailable scanner.
-- [ ] T045 [US1] Add integration coverage for retries, poison messages, duplicate/stale delivery, and interrupted multi-file uploads.
+- [X] T027 [US1] Implement upload metadata and file validation, including format, size, filename, and content-type rules.
+- [X] T028 [US1] Implement private quarantine storage, hashing, and cleanup for an upload.
+- [X] T029 [US1] Implement `Document` creation, authorization, and scan-job outbox creation for a valid upload.
+- [X] T030 [US1] Implement scan-result validation for job key, version, hash, provenance, and current document state.
+- [X] T031 [US1] Implement clean, flagged, failed, duplicate, and stale scan-result state transitions.
+- [X] T032 [US1] Implement bounded retry and visibility-timeout handling for scan jobs.
+- [X] T033 [US1] Implement poison-message handling, uploader-only retention, and terminal failure auditing.
+- [X] T034 [US1] Implement the Azure Queue Storage adapter for compact schema-versioned `ScanJobMessage` JSON.
+- [X] T035 [US1] Implement the private Azure Blob Storage adapter using generated keys and managed identity.
+- [X] T036 [US1] Implement the Azure Function trigger to deserialize and validate a `ScanJobMessage`.
+- [X] T037 [US1] Implement Function scanner invocation, result publication/application, and successful/terminal acknowledgement behavior.
+- [X] T038 [US1] Configure Function retry/dequeue limits, visibility timeout, poison queue routing, and non-secret logging.
+- [X] T039 [US1] Add Azure adapter and Function contract tests for retry, terminal failure, poison routing, and acknowledgement.
+- [X] T040 [US1] Add contract tests for idempotency, stale results, and no-secret/no-bytes queue guarantees.
+- [X] T041 [US1] Add upload form UI with accessible metadata labels and per-file validation errors.
+- [X] T042 [US1] Add upload status UI for pending, flagged, and failed states with downloads disabled.
+- [X] T043 [US1] Add uploader-only document status/detail components that never expose quarantined bytes or storage paths.
+- [X] T044 [US1] Add integration coverage for pending privacy, clean release, flagged files, and unavailable scanner.
+- [X] T045 [US1] Add integration coverage for retries, poison messages, duplicate/stale delivery, and interrupted multi-file uploads.
 
 **Checkpoint**: The upload and asynchronous scan workflow is independently testable
 with local adapters and Azure Function/Queue Storage adapters.
